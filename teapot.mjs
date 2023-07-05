@@ -23,13 +23,17 @@ async function loadTeapotGeometry() {
           vertices.push(...items.slice(1, 4).map((v) => parseFloat(v)/5));
           break;
         case "f":
-          const [a, b, c, d] = items.slice(1).map((v) => {
+          const ndx = items.slice(1).map((v) => {
             const indices = v.split("/").map((index) => parseInt(index, 10) - 1);
             return indices[0];
           });
-          indexes.push(a, b, c);
-          if (d) {
-            indexes.push(c, d, a);
+          switch (ndx.length) {
+            case 3:
+              indexes.push(ndx[0], ndx[1], ndx[2]);
+              break;
+            case 4:
+              indexes.push(ndx[0], ndx[1], ndx[2], ndx[2], ndx[3], ndx[0]);
+              break;
           }
           break;
       }
