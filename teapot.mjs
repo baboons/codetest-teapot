@@ -20,28 +20,18 @@ async function loadTeapotGeometry() {
 
       switch (items[0]) {
         case "v":
-          vertices.push(items.slice(1,4).map((v) => parseFloat(v)))
+          vertices.push(...items.slice(1, 4).map((v) => parseFloat(v)/2-1));
           break;
         case "f":
-          const face = items.slice(1).map(v => {
-            const indices = v.split("/").map(index => parseInt(index, 10)-1)
-            return indices[0]
-          })
-          indexes.push(face)
+          const face = items.slice(1).map((v) => {
+            const indices = v.split("/").map((index) => parseInt(index, 10) - 1);
+            return indices[0];
+          });
+          indexes.push(...face);
           break;
       }
-
   }
 
-  console.log(vertices)
-  console.log(indexes)
-
-
-  // Return indices and vertices of the teapot
-  // TODO: Right now this returns a triangle
-  //
-  //indexes: new Uint16Array([0, 1, 2]),
-  //vertices: new Float32Array([-1, -1, 0, 0, 1, 0, 1, -1, 0])
   return {
     indexes: new Uint16Array(indexes),
     vertices: new Float32Array(vertices)
@@ -127,7 +117,7 @@ async function renderTeapot() {
     ]));
 
     // Render the teapot
-    context.drawElements(context.TRIANGLES, 3, context.UNSIGNED_SHORT, 0);
+    context.drawElements(context.TRIANGLES, teapotGeometry.indexes.length, context.UNSIGNED_SHORT, 0);
     context.flush();
 
     // Request another frame
