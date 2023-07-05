@@ -20,14 +20,14 @@ async function loadTeapotGeometry() {
 
       switch (items[0]) {
         case "v":
-          vertices.push(...items.slice(1, 4).map((v) => parseFloat(v)/2-1));
+          vertices.push(...items.slice(1, 4).map((v) => parseFloat(v)/5));
           break;
         case "f":
-          const face = items.slice(1).map((v) => {
+          const [a, b, c, d] = items.slice(1).map((v) => {
             const indices = v.split("/").map((index) => parseInt(index, 10) - 1);
             return indices[0];
           });
-          indexes.push(...face);
+          indexes.push(a, b, c, c, d, a);
           break;
       }
   }
