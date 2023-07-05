@@ -27,7 +27,10 @@ async function loadTeapotGeometry() {
             const indices = v.split("/").map((index) => parseInt(index, 10) - 1);
             return indices[0];
           });
-          indexes.push(a, b, c, c, d, a);
+          indexes.push(a, b, c);
+          if (d) {
+            indexes.push(c, d, a);
+          }
           break;
       }
   }
