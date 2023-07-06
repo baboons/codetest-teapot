@@ -12,6 +12,7 @@ async function loadTeapotGeometry() {
 
   const vertices = []
   const indexes = []
+  const normals = []
 
 
   // Parse the obj file line by line
@@ -22,6 +23,9 @@ async function loadTeapotGeometry() {
         case "v":
           vertices.push(...items.slice(1, 4).map((v) => parseFloat(v)/5));
           break;
+        case "vn":
+          normals.push(...items.slice(1, 4).map((v) => parseFloat(v)));
+          break
         case "f":
           const ndx = items.slice(1).map((v) => {
             const indices = v.split("/").map((index) => parseInt(index, 10) - 1);
@@ -41,7 +45,8 @@ async function loadTeapotGeometry() {
 
   return {
     indexes: new Uint16Array(indexes),
-    vertices: new Float32Array(vertices)
+    vertices: new Float32Array(vertices),
+    normals: new Float32Array(normals)
   };
 }
 
@@ -99,6 +104,11 @@ async function renderTeapot() {
   context.bindBuffer(context.ARRAY_BUFFER, position);
   context.bufferData(context.ARRAY_BUFFER, teapotGeometry.vertices, context.STATIC_DRAW);
 
+  // Bind normals to ARRAY_BUFFER
+  const normal = context.createBuffer();
+  context.bindBuffer(context.ARRAY_BUFFER, normal);
+  context.bufferData(context.ARRAY_BUFFER, teapotGeometry.normals, context.STATIC_DRAW);
+
   // Use the red shader program
   const program = setupShaderProgram(context);
   context.useProgram(program);
@@ -107,6 +117,12 @@ async function renderTeapot() {
   const positionLocation = context.getAttribLocation(program, "position");
   context.enableVertexAttribArray(positionLocation);
   context.vertexAttribPointer(positionLocation, 3, context.FLOAT, false, 0, 0);
+
+  // Bind normal to its shader attribute
+  const normalLocation = context.getAttribLocation(program, "normal");
+  context.enableVertexAttribArray(normalLocation);
+  context.vertexAttribPointer(normalLocation, 3, context.FLOAT, false, 0, 0);
+
 
   let firstFrame = performance.now();
 
