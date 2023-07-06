@@ -64,9 +64,10 @@ function setupShaderProgram(context) {
     attribute vec3 position;
     attribute vec3 normal;
     uniform mat4 modelViewMatrix;
+    uniform mat4 projectionMatrix;
     varying vec3 vNormal;
     void main() {
-      gl_Position = modelViewMatrix * vec4(position, 1);
+      gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1);
       vNormal = normal;
     }
   `,
@@ -180,6 +181,7 @@ async function renderTeapot() {
   context.enableVertexAttribArray(normalLocation);
   context.vertexAttribPointer(normalLocation, 3, context.FLOAT, false, 0, 0);
 
+  // Bind projection matrix
   const projectionMatrixLocation = context.getUniformLocation(
     program,
     "projectionMatrix",
