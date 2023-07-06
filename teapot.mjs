@@ -12,6 +12,7 @@ async function loadTeapotGeometry() {
 
   const vertices = []
   const indexes = []
+  const normals = []
 
 
   // Parse the obj file line by line
@@ -22,6 +23,9 @@ async function loadTeapotGeometry() {
         case "v":
           vertices.push(...items.slice(1, 4).map((v) => parseFloat(v)/5));
           break;
+        case "vn":
+          normals.push(...items.slice(1, 4).map((v) => parseFloat(v)));
+          break
         case "f":
           const ndx = items.slice(1).map((v) => {
             const indices = v.split("/").map((index) => parseInt(index, 10) - 1);
@@ -41,7 +45,8 @@ async function loadTeapotGeometry() {
 
   return {
     indexes: new Uint16Array(indexes),
-    vertices: new Float32Array(vertices)
+    vertices: new Float32Array(vertices),
+    normals: new Float32Array(normals)
   };
 }
 
@@ -56,15 +61,47 @@ function setupShaderProgram(context) {
 
   context.shaderSource(vertexShader, `
     attribute vec3 position;
+    attribute vec3 normal;
     uniform mat4 modelViewMatrix;
+    varying vec3 vNormal;
     void main() {
       gl_Position = modelViewMatrix * vec4(position, 1);
+      vNormal = normal;
     }
   `);
   context.shaderSource(fragmentShader, `
     precision mediump float;
+    varying vec3 vNormal;
     void main() {
-      gl_FragColor = vec4(1, 0, 0, 1);
+      vec3 ambient = vec3(0.5, 0.5, 0.5); // color - grey
+
+      // diffuse (lambertian) lighting
+      // lightColor, lightSource, normal, diffuseStrength
+      vec3 normal = normalize(vNormal.xyz);
+      vec3 lightColor = vec3(1.0, 1.0, 1.0); // color - white
+      vec3 lightSource = vec3(1.0, 2.0, 1.0); // coord - (1, 0, 0)
+      float diffuseStrength = max(0.0, dot(lightSource, normal));
+      vec3 diffuse = diffuseStrength * lightColor;
+
+      // specular light
+      // lightColor, lightSource, normal, specularStrength, viewSource
+      vec3 cameraSource = vec3(0.0, 0.0, 1.0);
+      vec3 viewSource = normalize(cameraSource);
+      vec3 reflectSource = normalize(reflect(-lightSource, normal));
+      float specularStrength = max(0.0, dot(viewSource, reflectSource));
+      specularStrength = pow(specularStrength, 256.0);
+      vec3 specular = specularStrength * lightColor;
+
+      // lighting = ambient + diffuse + specular
+      vec3 lighting = vec3(0.0, 0.0, 0.0); // color - black
+      lighting = ambient * 0.0 + diffuse * 0.5 + specular * 0.5;
+
+      // color = modelColor * lighting
+      vec3 modelColor = vec3(0.75, 0, 0);
+      vec3 color = modelColor * lighting;
+
+      gl_FragColor = vec4(color, 1.0);
+
     }
   `);
 
@@ -94,19 +131,30 @@ async function renderTeapot() {
   context.bindBuffer(context.ELEMENT_ARRAY_BUFFER, index);
   context.bufferData(context.ELEMENT_ARRAY_BUFFER, teapotGeometry.indexes, context.STATIC_DRAW);
 
+  // Use the red shader program
+  const program = setupShaderProgram(context);
+  context.useProgram(program);
+
   // Bind vertices to ARRAY_BUFFER
   const position = context.createBuffer();
   context.bindBuffer(context.ARRAY_BUFFER, position);
   context.bufferData(context.ARRAY_BUFFER, teapotGeometry.vertices, context.STATIC_DRAW);
 
-  // Use the red shader program
-  const program = setupShaderProgram(context);
-  context.useProgram(program);
-
   // Bind position to it shader attribute
   const positionLocation = context.getAttribLocation(program, "position");
   context.enableVertexAttribArray(positionLocation);
   context.vertexAttribPointer(positionLocation, 3, context.FLOAT, false, 0, 0);
+
+  // Bind normal to ARRAY_BUFFER
+  const normal = context.createBuffer();
+  context.bindBuffer(context.ARRAY_BUFFER, normal);
+  context.bufferData(context.ARRAY_BUFFER, teapotGeometry.normals, context.STATIC_DRAW);
+
+  // Bind normal to it shader attribute
+  const normalLocation = context.getAttribLocation(program, "normal");
+  context.enableVertexAttribArray(normalLocation);
+  context.vertexAttribPointer(normalLocation, 3, context.FLOAT, false, 0, 0);
+
 
   let firstFrame = performance.now();
 
