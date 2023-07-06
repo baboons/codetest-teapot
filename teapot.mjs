@@ -61,15 +61,21 @@ function setupShaderProgram(context) {
 
   context.shaderSource(vertexShader, `
     attribute vec3 position;
+    attribute vec3 normal;
     uniform mat4 modelViewMatrix;
+    varying vec3 vNormal;
     void main() {
       gl_Position = modelViewMatrix * vec4(position, 1);
+      vNormal = normal;
     }
   `);
   context.shaderSource(fragmentShader, `
     precision mediump float;
+    varying vec3 vNormal;
     void main() {
-      gl_FragColor = vec4(1, 0, 0, 1);
+      vec3 lightDirection = normalize(vec3(0.85, 0.8, 0.75));
+      float lighting = max(dot(vNormal, lightDirection), 0.0);
+      gl_FragColor = vec4(1, 0, 0, 1) * lighting;
     }
   `);
 
@@ -99,26 +105,26 @@ async function renderTeapot() {
   context.bindBuffer(context.ELEMENT_ARRAY_BUFFER, index);
   context.bufferData(context.ELEMENT_ARRAY_BUFFER, teapotGeometry.indexes, context.STATIC_DRAW);
 
+  // Use the red shader program
+  const program = setupShaderProgram(context);
+  context.useProgram(program);
+
   // Bind vertices to ARRAY_BUFFER
   const position = context.createBuffer();
   context.bindBuffer(context.ARRAY_BUFFER, position);
   context.bufferData(context.ARRAY_BUFFER, teapotGeometry.vertices, context.STATIC_DRAW);
-
-  // Bind normals to ARRAY_BUFFER
-  const normal = context.createBuffer();
-  context.bindBuffer(context.ARRAY_BUFFER, normal);
-  context.bufferData(context.ARRAY_BUFFER, teapotGeometry.normals, context.STATIC_DRAW);
-
-  // Use the red shader program
-  const program = setupShaderProgram(context);
-  context.useProgram(program);
 
   // Bind position to it shader attribute
   const positionLocation = context.getAttribLocation(program, "position");
   context.enableVertexAttribArray(positionLocation);
   context.vertexAttribPointer(positionLocation, 3, context.FLOAT, false, 0, 0);
 
-  // Bind normal to its shader attribute
+  // Bind vertices to ARRAY_BUFFER
+  const normal = context.createBuffer();
+  context.bindBuffer(context.ARRAY_BUFFER, normal);
+  context.bufferData(context.ARRAY_BUFFER, teapotGeometry.normals, context.STATIC_DRAW);
+
+  // Bind normal to it shader attribute
   const normalLocation = context.getAttribLocation(program, "normal");
   context.enableVertexAttribArray(normalLocation);
   context.vertexAttribPointer(normalLocation, 3, context.FLOAT, false, 0, 0);
