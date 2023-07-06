@@ -209,8 +209,6 @@ async function renderTeapot() {
         rotation += 0.05;
         break;
     }
-
-    console.log(rotation);
   });
 
   const renderLoop = () => {
