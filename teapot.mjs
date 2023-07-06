@@ -187,7 +187,8 @@ async function renderTeapot() {
 
   const drag = (event) => {
     if (isDragging) {
-      rotation = event.clientX - previousMousePosition[0];
+      const deltaX = event.clientX - previousMousePosition[0];
+      rotation += deltaX * 0.01;
       previousMousePosition = [event.clientX, event.clientY];
     }
   };
