@@ -199,6 +199,20 @@ async function renderTeapot() {
   canvas.addEventListener("mouseout", stopDragging);
   canvas.addEventListener("mousemove", drag);
 
+  // Setup listner for keyboard event
+  window.addEventListener("keydown", (event) => {
+    switch (event.code) {
+      case "ArrowLeft":
+        rotation -= 0.05;
+        break;
+      case "ArrowRight":
+        rotation += 0.05;
+        break;
+    }
+
+    console.log(rotation);
+  });
+
   const renderLoop = () => {
     // Set a rotating model view matrix
     const modelViewMatrixLocation = context.getUniformLocation(
