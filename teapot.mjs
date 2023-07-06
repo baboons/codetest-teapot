@@ -158,6 +158,40 @@ async function renderTeapot() {
 
   let firstFrame = performance.now();
 
+  const startDragging = (event) => {
+      isDragging = true;
+      previousMousePosition = [event.clientX, event.clientY];
+  }
+
+  const stopDragging = (event) => {
+      isDragging = false;
+  }
+
+  const drag = (event) => {
+      console.log('drag', isDragging)
+      if (isDragging) {
+          const deltaX = event.clientX - previousMousePosition[0];
+          const deltaY = event.clientY - previousMousePosition[1];
+          rotationY += deltaX * 0.01;
+          rotationX += deltaY * 0.01;
+          previousMousePosition = [event.clientX, event.clientY];
+          console.log(rotationX, rotationY)
+      }
+  }
+
+  let rotationX = 0;
+  let rotationY = 0;
+
+  // Setup listeners for mouse events
+  canvas.addEventListener('mousedown', startDragging);
+  canvas.addEventListener('mouseup', stopDragging);
+  canvas.addEventListener('mouseout', stopDragging);
+  canvas.addEventListener('mousemove', drag);
+
+  let isDragging = false;
+  let previousMousePosition;
+
+
   const renderLoop = () => {
     const delta = performance.now() - firstFrame;
 
